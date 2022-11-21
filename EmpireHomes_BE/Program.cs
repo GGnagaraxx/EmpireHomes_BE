@@ -19,7 +19,9 @@ builder.Services.AddCors(options =>
     options.AddPolicy(name: "AllowedOrigins",
                       policy =>
                       {
-                          policy.WithOrigins("http://localhost:3000")
+                          policy.WithOrigins("http://localhost:3000", 
+                                    "https://empire-homes.azurewebsites.net",
+                                    "https://empire-homes-uat.azurewebsites.net")
                                                   .AllowAnyHeader()
                                                   .AllowAnyMethod();
                       });
