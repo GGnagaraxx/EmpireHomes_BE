@@ -1,18 +1,27 @@
+using Azure.Extensions.AspNetCore.Configuration.Secrets;
 using EmpireHomes_BE;
+using EmpireHomes_BE.Controllers.Services.Azure;
 using EmpireHomes_BE.Extensions;
 using Microsoft.EntityFrameworkCore;
+using System.Diagnostics;
 using static System.Net.WebRequestMethods;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-
 builder.Services.AddControllers();
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+builder.Services.AddScoped<IBlobStorage, BlobStorage>();
+
+KeyVault keyVault = new(builder.Configuration);
+var client = keyVault.GetKeyVaultClient();
+builder.Configuration.AddAzureKeyVault(client, new AzureKeyVaultConfigurationOptions());
+
 builder.Services.AddDbContext<DataContext>(options =>
 {
-    options.UseSqlServer(builder.Configuration.GetConnectionString("Dev"));
+    options.UseSqlServer(builder.Configuration["SQLConnectionString"], options => options.EnableRetryOnFailure());
 });
-
 
 builder.Services.AddCors(options =>
 {
@@ -27,9 +36,6 @@ builder.Services.AddCors(options =>
                       });
 });
 
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
 
 
 var app = builder.Build();

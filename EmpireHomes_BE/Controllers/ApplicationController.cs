@@ -1,4 +1,8 @@
-﻿using EmpireHomes_BE.Models;
+﻿using EmpireHomes_BE.Controllers.Mappers;
+using EmpireHomes_BE.Controllers.Services;
+using EmpireHomes_BE.Controllers.Services.Azure;
+using EmpireHomes_BE.Models;
+using EmpireHomes_BE.Models.DTOs;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -11,9 +15,13 @@ namespace EmpireHomes_BE.Controllers
     public class ApplicationController : ControllerBase
     {
         private readonly DataContext _context;
+        private readonly ApplicationMapper mapper;
+        private readonly ApplicationService service;
 
-        public ApplicationController(DataContext dbContext)
+        public ApplicationController(DataContext dbContext, IBlobStorage storage, IConfiguration iConfig)
         {
+            service = new ApplicationService();
+            mapper = new ApplicationMapper(service, storage, iConfig);
             _context = dbContext;
         }
 
@@ -26,8 +34,9 @@ namespace EmpireHomes_BE.Controllers
 
         // POST api/<ApplicationController>
         [HttpPost]
-        public async Task<ActionResult<List<Application>>> Post([FromBody] Application application)
+        public async Task<ActionResult<List<Application>>> Post([FromBody] ApplicationRequest applicationReq)
         {
+            Application application = mapper.ReqToApplication(applicationReq);
             _context.Applications.Add(application);
             await _context.SaveChangesAsync();
 
